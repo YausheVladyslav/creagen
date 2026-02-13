@@ -12,7 +12,7 @@ test.describe('API auth + ws', () => {
         wsClient = new WsClient('wss://stage-backend-api-gateway-c1g0.creagen.app/ws');
     });
 
-    test.skip('should authenticate and receive data via WS for one message', async ({ loggedInUser }) => {
+    test('should authenticate and receive data via WS for one message', async ({ loggedInUser }) => {
         const token = loggedInUser.user.access;
 
         await wsClient.connect();
@@ -73,7 +73,7 @@ test.describe('API auth + ws', () => {
             "data": { "projectID": "39a74e98-b0e9-4170-b4c6-e3d371b191d3" }
         }
 
-       await new Promise(resolve => setTimeout(resolve, 500));
+       await new Promise(resolve => setTimeout(resolve, 1000));
 
         await wsClient.send(sendMessage2)
 
