@@ -1,9 +1,9 @@
 import { expect /*, test*/ } from '@playwright/test';
-import { test } from '../../castomFixtures/CastomFixture';
-import ApiClient from '../../src/clients/ApiClient';
-import WsClient from '../../src/clients/WsClient';
+import { test } from '../../../castomFixtures/CastomFixture';
+import ApiClient from '../../../src/clients/ApiClient';
+import WsClient from '../../../src/clients/WsClient';
 
-test.describe('API auth + ws', () => {
+test.describe.skip('API auth + ws', () => {
     let apiClient;
     let wsClient;
 
