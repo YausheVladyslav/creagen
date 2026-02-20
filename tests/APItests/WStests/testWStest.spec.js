@@ -157,10 +157,9 @@ test.describe.only('API auth + ws', () => {
 
     });
 
-    test.only('тест із реконнектом', async ({ loggedInUser }) => {
+    test.only('TEST WITH RECONNECT', async ({ loggedInUser }) => {
         const token = loggedInUser.user.access;
 
-        // Підключаємось і кажемо, що робити при кожному відновленні
         await wsClient.connectWithReconnect(async () => {
             await wsClient.send({ type: 516, data: { token } });
         });
