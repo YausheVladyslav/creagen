@@ -108,5 +108,9 @@ export default class WsClient {
         });
     }
 
+    async forceDisconnect() {
+        this.ws.terminate();
+    }
+
 
 }

@@ -15,17 +15,15 @@ test.describe.only('API auth + ws', () => {
     test.afterEach(async () => {
         await wsClient.close();
         await apiClient.userAPIController.logout();
-        // await new Promise(resolve => setTimeout(resolve, 1000));
+        await wsClient.clearHistory();
     });
 
     test('should authenticate and receive data via WS for one message', async ({ loggedInUser }) => {
-        // const wsClient = new WsClient('wss://stage-backend-api-gateway-c1g0.creagen.app/ws');
         const token = loggedInUser.user.access;
 
         await wsClient.connect();
 
         const sendMessage1 = { id: '3818', type: 516, data: { token: token } };
-
         await wsClient.send(sendMessage1);
 
         const answerMessage1 = await wsClient.waitForMessage(msg => msg.type === 516);
@@ -66,15 +64,12 @@ test.describe.only('API auth + ws', () => {
     });
 
     test('should authenticate and receive data via WS for multiple messages', async ({ loggedInUser }) => {
-        // const wsClient = new WsClient('wss://stage-backend-api-gateway-c1g0.creagen.app/ws');
         const token = loggedInUser.user.access;
 
         await wsClient.connect();
-
         const sendMessage1 = { id: '3818', type: 516, data: { token: token } };
 
         await wsClient.send(sendMessage1);
-
         const authMessage = await wsClient.waitForMessage(msg => msg.type === 516);
 
         const sendMessage2 = {
@@ -114,8 +109,99 @@ test.describe.only('API auth + ws', () => {
         console.log('Received message:', JSON.stringify(receivedMessage));
         expect(receivedMessage).toMatchObject(expectedMessage2);
 
+    });
 
+    test('test with RECONNECT', async ({ loggedInUser }) => {
+        const token = loggedInUser.user.access;
 
+        await wsClient.connect();
+        const sendMessage1 = { id: '3818', type: 516, data: { token: token } };
+
+        await wsClient.send(sendMessage1);
+        const authMessage = await wsClient.waitForMessage(msg => msg.type === 516);
+
+        const sendMessage2 = {
+            "id": "f319e122-3efc-47ce-a636-d749afc96ffe_join-to-the-project",
+            "type": 5001,
+            "data": { "projectID": "39a74e98-b0e9-4170-b4c6-e3d371b191d3" }
+        }
+
+        const expectedMessage2 = {
+            "id": sendMessage2.id,
+            "response": {
+                "data":
+                {
+                    "success": true,
+                    "activeUsers": 2,
+                    "wasFirstUser": false,
+                    "clientID": expect.any(String),
+                    "color": "#FFA07A",
+                    "email": loggedInUser.userData.email,
+                    "login": expect.any(String),
+                    "avatarUrl": expect.any(String),
+                    "projectID": sendMessage2.data.projectID,
+                    "userID": "61985a2a-7144-426a-bca3-f5ff64d3cc36",
+                    // "data": null,
+                }, "error": null
+            }, "type": sendMessage2.type
+        }
+
+        await wsClient.send(sendMessage2)
+        const receivedMessage = await wsClient.waitForMessage(msg => msg.id === sendMessage2.id && msg.type === sendMessage2.type);
+
+        console.log('Auth message:', JSON.stringify(authMessage));
+        expect(authMessage).toHaveProperty('type', 516);
+
+        console.log('Received message:', JSON.stringify(receivedMessage));
+        expect(receivedMessage).toMatchObject(expectedMessage2);
+
+    });
+
+    test.only('тест із реконнектом', async ({ loggedInUser }) => {
+        const token = loggedInUser.user.access;
+
+        // Підключаємось і кажемо, що робити при кожному відновленні
+        await wsClient.connectWithReconnect(async () => {
+            await wsClient.send({ type: 516, data: { token } });
+        });
+
+        await wsClient.forceDisconnect();
+
+        const authMessage = await wsClient.waitForMessage(m => m.type === 516);
+        console.log('Auth message after reconnect:', JSON.stringify(authMessage));
+        expect(authMessage).toBeDefined();
+
+        const sendMessage2 = {
+            "id": "f319e122-3efc-47ce-a636-d749afc96ffe_join-to-the-project",
+            "type": 5001,
+            "data": { "projectID": "39a74e98-b0e9-4170-b4c6-e3d371b191d3" }
+        }
+
+        const expectedMessage2 = {
+            "id": sendMessage2.id,
+            "response": {
+                "data":
+                {
+                    "success": true,
+                    "activeUsers": 2,
+                    "wasFirstUser": false,
+                    "clientID": expect.any(String),
+                    "color": "#FFA07A",
+                    "email": loggedInUser.userData.email,
+                    "login": expect.any(String),
+                    "avatarUrl": expect.any(String),
+                    "projectID": sendMessage2.data.projectID,
+                    "userID": "61985a2a-7144-426a-bca3-f5ff64d3cc36",
+                    // "data": null,
+                }, "error": null
+            }, "type": sendMessage2.type
+        }
+
+        await wsClient.send(sendMessage2)
+        const receivedMessage = await wsClient.waitForMessage(msg => msg.id === sendMessage2.id && msg.type === sendMessage2.type);
+
+        console.log('Received message SECOND:', JSON.stringify(receivedMessage));
+        expect(receivedMessage).toMatchObject(expectedMessage2);
     });
 
 });
