@@ -9,5 +9,6 @@ export const test = base.extend({
         const responseJson = await loginResponse.json();
         console.log('LOGGED USER DATA IN FIXTURE:', JSON.stringify(responseJson));
         await use({ client, user: responseJson.data, userData: loginData });
+        // await client.userAPIController.logout(responseJson.data.access);
     }
 });
